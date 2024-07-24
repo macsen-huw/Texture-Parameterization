@@ -253,7 +253,10 @@ void AttributedObject::Render(RenderParameters *renderParameters)
 	float scale = renderParameters->zoomScale;
 	scale /= objectSize;
 	// Scale defaults to the zoom setting
-	glTranslatef(-centreOfGravity.x * scale, -centreOfGravity.y * scale, -centreOfGravity.z * scale);
+
+    //Only move the image if showing the mesh, not the texture
+    if(!(renderParameters->renderTexture || renderParameters->renderNormalMap))
+        glTranslatef(-centreOfGravity.x * scale, -centreOfGravity.y * scale, -centreOfGravity.z * scale);
 		
 	if (renderParameters->useWireframe)
 		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
@@ -277,9 +280,9 @@ void AttributedObject::Render(RenderParameters *renderParameters)
 
                 glVertex3f
                     (
-                    scale * textureCoords[faceVertices[face+vertex]].x,
-                    scale * textureCoords[faceVertices[face+vertex]].y,
-                    scale * textureCoords[faceVertices[face+vertex]].z
+                    (textureCoords[faceVertices[face+vertex]].x - 0.5) * 2,
+                    (textureCoords[faceVertices[face+vertex]].y - 0.5) * 2,
+                    textureCoords[faceVertices[face+vertex]].z
                     );
 
             }
@@ -307,9 +310,9 @@ void AttributedObject::Render(RenderParameters *renderParameters)
                 {
                     glVertex3f
                         (
-                        scale * textureCoords[faceVertices[face+vertex]].x,
-                        scale * textureCoords[faceVertices[face+vertex]].y,
-                        scale * textureCoords[faceVertices[face+vertex]].z
+                        (textureCoords[faceVertices[face+vertex]].x - 0.5) * 2,
+                        (textureCoords[faceVertices[face+vertex]].y - 0.5) * 2,
+                        textureCoords[faceVertices[face+vertex]].z
                         );
                 }
 

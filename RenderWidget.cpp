@@ -32,7 +32,6 @@
 ////////////////////////////////////////////////////////////////////////
 
 #include <math.h>
-
 // include the header file
 #include "RenderWidget.h"
 
@@ -95,7 +94,6 @@ void RenderWidget::resizeGL(int w, int h)
     
     // compute the aspect ratio of the widget
     float aspectRatio = (float) w / (float) h;
-    
     // we want to capture a sphere of radius 1.0 without distortion
     // so we set the ortho projection based on whether the window is portrait (> 1.0) or landscape
     // portrait ratio is wider, so make bottom & top -1.0 & 1.0
@@ -120,11 +118,15 @@ void RenderWidget::paintGL()
     // start with lighting turned off
     glDisable(GL_LIGHTING);
 
-    // translate by the visual translation
-    glTranslatef(renderParameters->xTranslate, renderParameters->yTranslate, 0.0f);
+    //We only scale and rotate on certain settings
+    if(!(renderParameters->renderTexture || renderParameters->renderNormalMap) )
+        {
+        // translate by the visual translation
+        glTranslatef(renderParameters->xTranslate, renderParameters->yTranslate, 0.0f);
 
-    // apply rotation matrix from arcball
-    glMultMatrixf(renderParameters->rotationMatrix.columnMajor().coordinates);
+        // apply rotation matrix from arcball
+        glMultMatrixf(renderParameters->rotationMatrix.columnMajor().coordinates);
+        }
 
     // tell the object to draw itself, 
     // passing in the render parameters for reference

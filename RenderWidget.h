@@ -53,7 +53,6 @@ class RenderWidget : public QOpenGLWidget
 
     // the render parameters to use
     RenderParameters *renderParameters;
-
     public:
     // constructor
     RenderWidget
