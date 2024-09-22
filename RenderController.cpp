@@ -83,6 +83,10 @@ RenderController::RenderController
     QObject::connect(   renderWindow->renderNormalMapBox,           SIGNAL(stateChanged(int)),
                         this,                                       SLOT(renderNormalMapCheckChanged(int)));
 
+    QObject::connect( renderWindow->exportButton, SIGNAL(released()), this, SLOT(exportToPNG()));
+
+    QObject::connect(renderWindow->exportOBJButton, SIGNAL(released()), this, SLOT(exportOBJ()));
+
     // copy the rotation matrix from the widgets to the model
     renderParameters->rotationMatrix = renderWindow->modelRotator->RotationMatrix();
     } // RenderController::RenderController()
@@ -253,3 +257,56 @@ void RenderController::EndScaledDrag(float x, float y)
     renderWindow->ResetInterface();
     } // RenderController::EndScaledDrag()
 
+void RenderController::exportToPNG()
+{
+    int width = 800;
+    int height = 600;
+
+
+    QOpenGLFramebufferObjectFormat format;
+    format.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+    format.setTextureTarget(GL_TEXTURE_2D);
+    format.setInternalTextureFormat(GL_RGBA);
+
+    QOpenGLFramebufferObject fbo(width, height, format);
+
+    fbo.bind();
+
+    glViewport(0, 0, width, height);
+
+    //Save whatever the RenderTexture value was on and restore afterwards
+    bool texTemp = renderParameters->renderTexture;
+    bool wireTemp = renderParameters->useWireframe;
+    bool normalTemp = renderParameters->useNormal;
+    bool uvTemp = renderParameters->useTexCoords;
+
+
+    renderParameters->renderTexture = true;
+    renderParameters->useWireframe = false;
+    renderParameters->useNormal = false;
+    renderParameters->useTexCoords = false;
+
+    //Render the model
+    attributedObject->Render(renderParameters);
+
+    //Restore to what it originally was
+    renderParameters->renderTexture = texTemp;
+    renderParameters->useWireframe = wireTemp;
+    renderParameters->useNormal = normalTemp;
+    renderParameters->useTexCoords = uvTemp;
+
+
+    QImage image = fbo.toImage();
+
+    image.save("texture.png");
+
+    fbo.release();
+
+    renderWindow->ResetInterface();
+}
+
+void RenderController::exportOBJ()
+{
+    std::ofstream of("exported.obj");
+    attributedObject->WriteObjectStream(of);
+}

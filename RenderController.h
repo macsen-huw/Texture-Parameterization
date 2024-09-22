@@ -24,6 +24,9 @@
 // QT headers
 #include <QtGui>
 #include <QMouseEvent>
+#include <QOpenGLFramebufferObject>
+
+#include <fstream>
 
 // Local headers
 #include "RenderWindow.h"
@@ -83,6 +86,10 @@ class RenderController : public QObject
     void ContinueScaledDrag(float x, float y);
     void EndScaledDrag(float x, float y);
 
+
+    //Slot for responding to button press
+    void exportToPNG();
+    void exportOBJ();
     }; // class RenderController
 
 // end of include guard

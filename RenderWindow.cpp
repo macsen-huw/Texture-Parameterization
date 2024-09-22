@@ -64,7 +64,10 @@ RenderWindow::RenderWindow
     useTexCoordsBox             = new QCheckBox                 ("UVW -> RGB",          this);
     renderTextureBox            = new QCheckBox                 ("Texture",             this);
     renderNormalMapBox          = new QCheckBox                 ("Normal Map",          this);
-    
+
+    exportButton = new QPushButton("Export Texture", this);
+    exportOBJButton = new QPushButton("Export OBJ", this);
+
     // spatial sliders
     xTranslateSlider            = new QSlider                   (Qt::Horizontal,        this);
     yTranslateSlider            = new QSlider                   (Qt::Vertical,          this);
@@ -77,7 +80,7 @@ RenderWindow::RenderWindow
     
     // add all of the widgets to the grid               Row         Column      Row Span    Column Span
     
-    int nStacked = 7;
+    int nStacked = 8;
     
     windowLayout->addWidget(renderWidget,               0,          1,          nStacked,   1           );
     windowLayout->addWidget(yTranslateSlider,           0,          2,          nStacked,   1           );
@@ -92,6 +95,9 @@ RenderWindow::RenderWindow
     windowLayout->addWidget(useTexCoordsBox,            4,          3,          1,          1           );
     windowLayout->addWidget(renderTextureBox,           5,          3,          1,          1           );
     windowLayout->addWidget(renderNormalMapBox,         6,          3,          1,          1           );
+
+    windowLayout->addWidget(exportButton, nStacked+2, 1, 1, 1);
+    windowLayout->addWidget(exportOBJButton, nStacked+1, 1, 1, 1);
 
     // Translate Slider Row
     windowLayout->addWidget(xTranslateSlider,           nStacked,   1,          1,          1           );

@@ -35,7 +35,6 @@
 #include <cmath>
 #include <map>
 #include <algorithm>
-
 // include the Cartesian 3- vector class
 #include "Cartesian3.h"
 
@@ -73,8 +72,6 @@ bool AttributedObject::ReadObjectStream(std::istream &geometryStream)
         { // not eof
         // character to read
         char firstChar = geometryStream.get();
-        
-//         std::cout << "Read: " << firstChar << std::endl;
         
         // check for eof() in case we've run out
         if (geometryStream.eof())
@@ -213,19 +210,16 @@ void AttributedObject::WriteObjectStream(std::ostream &geometryStream)
         geometryStream << "v  " << std::fixed << vertices[vertex] << std::endl;
 
     // output the vertex colours
-    geometryStream << "# " << colours.size() << " vertex colours" << std::endl;
     for (unsigned int vertex = 0; vertex < colours.size(); vertex++)
         geometryStream << "vc " << std::fixed << colours[vertex] << std::endl;
 
     // output the vertex normals
-    geometryStream << "# " << normals.size() << " vertex normals" << std::endl;
     for (unsigned int vertex = 0; vertex < normals.size(); vertex++)
         geometryStream << "vn " << std::fixed << normals[vertex] << std::endl;
 
     // output the vertex coords
-    geometryStream << "# " << textureCoords.size() << " vertex tex coords" << std::endl;
     for (unsigned int vertex = 0; vertex < textureCoords.size(); vertex++)
-        geometryStream << "vt " << std::fixed << textureCoords[vertex] << std::endl;
+        geometryStream << "vt " << std::fixed << textureCoords[vertex].x << " " << textureCoords[vertex].y << std::endl;
 
     // and the faces
     for (unsigned int face = 0; face < faceVertices.size(); face+=3)
@@ -404,7 +398,26 @@ void AttributedObject::setup()
     performFloater();
 
     //After completing this, we calculate vertex normals
-    calculateNormals();
+    if(normals.empty())
+            calculateNormals();
+
+    //Get the max and min values of different parts
+    float maxTexX, maxTexY, minTexX, minTexY;
+    for(Cartesian3 tex : textureCoords)
+    {
+        if(tex.x > maxTexX)
+            maxTexX = tex.x;
+        if(tex.y > maxTexY)
+            maxTexY = tex.y;
+        if(tex.x < minTexX)
+            minTexX = tex.x;
+        if(tex.y < minTexY)
+            minTexY = tex.y;
+    }
+
+    //std::cout << "Highest values: " << maxTexX << ", " << maxTexY << std::endl;
+    //std::cout << "Lowest values: " << minTexX << ", " << minTexY << std::endl;
+
 }
 
 //Find the boundary vertices
@@ -625,28 +638,28 @@ void AttributedObject::mapBoundaryVertices()
         lowestX = std::min(lowestX, vertex.x);
      }
 
+    //Get the dimensions of the square that will be made
 
-    float distanceX = highestX - lowestX;
-    float distanceY = highestY - lowestY;
-
-    float minimumDistance = std::min(distanceX, distanceY);
-
-    //Due to how the models are oriented, we'll use either the XZ or ZY coordinates
-    bool ZYCoordinates;
-
-    if (minimumDistance == distanceX)
-        ZYCoordinates = true;
-    else
-        ZYCoordinates = false;
-
+    //axesOrientation = ZY_COORDINATES;
     float squareWidth, squareHeight;
 
-    squareWidth = highestZ - lowestZ;
-
-    if(ZYCoordinates)
+    if(axesOrientation == ZY_COORDINATES)
+    {
+        squareWidth = highestZ - lowestZ;
         squareHeight = highestY - lowestY;
+    }
+
+    else if (axesOrientation == XZ_COORDINATES)
+    {
+        squareWidth = highestX - lowestX;
+        squareHeight = highestZ - lowestZ;
+    }
+
     else
-        squareHeight = highestX - lowestX;
+    {
+        squareWidth = highestX - lowestX;
+        squareHeight = highestY - lowestY;
+    }
 
 
     std::vector<Cartesian3> textureCoordinates(vertices.size(), {0,0,0});
@@ -659,12 +672,36 @@ void AttributedObject::mapBoundaryVertices()
         //Find out what the closest distance is (i.e. nearest to 0)
         float distAcross, distUpwards;
 
+
+        /*
         distAcross = std::abs(vertex.z - lowestZ);
 
         if(ZYCoordinates)
             distUpwards = std::abs(vertex.y - lowestY);
         else
             distUpwards = std::abs(vertex.x - lowestX);
+        */
+
+        switch (axesOrientation)
+        {
+            case ZY_COORDINATES:
+                distAcross = std::abs(vertex.z - lowestZ);
+                distUpwards = std::abs(vertex.y - lowestY);
+            break;
+
+            case XZ_COORDINATES:
+                distAcross = std::abs(vertex.x - lowestX);
+                distUpwards = std::abs(vertex.z - lowestZ);
+            break;
+
+            //default - XY
+            default:
+                distAcross = std::abs(vertex.x - lowestX);
+                distUpwards = std::abs(vertex.y - lowestY);
+            break;
+        }
+
+
 
         float acrossCoordinate = distAcross / squareWidth;
         float upCoordinate = distUpwards / squareHeight;
@@ -698,10 +735,10 @@ void AttributedObject::mapBoundaryVertices()
 
     //We keep track of the closest boundaryCoordinate to the corner so we can clamp to the corner of the square
     //The first index is the distance, the second is the vertexID
-    float topLeft[2] = {5, -1};
-    float topRight[2] = {5, -1};
-    float bottomLeft[2] = {5, -1};
-    float bottomRight[2] = {5, -1};
+    float topLeft[2] = {100, -1};
+    float topRight[2] = {100, -1};
+    float bottomLeft[2] = {100, -1};
+    float bottomRight[2] = {100, -1};
 
 
     //Now loop through the boundary vertices to see which vertices belong to the corners
@@ -772,10 +809,10 @@ void AttributedObject::mapBoundaryVertices()
             Cartesian3 vertex = vertices[next];
 
             float distToDown;
-            if(ZYCoordinates)
-                distToDown = std::abs(vertex.y - lowestY);
+            if(axesOrientation == XZ_COORDINATES)
+                distToDown = std::abs(vertex.z - lowestZ);
             else
-                distToDown = std::abs(vertex.x - lowestX);
+                distToDown = std::abs(vertex.y - lowestY);
 
             float yCoordinate = distToDown / squareHeight;
 
@@ -798,7 +835,11 @@ void AttributedObject::mapBoundaryVertices()
             //Redo the barycentric mapping, ensuring it's to the correct edge
             Cartesian3 vertex = vertices[next];
 
-            float distToLeft = std::abs(vertex.z - lowestZ);
+            float distToLeft;
+            if(axesOrientation == ZY_COORDINATES)
+                distToLeft = std::abs(vertex.z - lowestZ);
+            else
+                distToLeft = std::abs(vertex.x - lowestX);
 
             float zCoordinate = distToLeft / squareWidth;
 
@@ -821,10 +862,11 @@ void AttributedObject::mapBoundaryVertices()
             Cartesian3 vertex = vertices[next];
 
             float distToDown;
-            if(ZYCoordinates)
-                distToDown = std::abs(vertex.y - lowestY);
+
+            if(axesOrientation == XZ_COORDINATES)
+                distToDown = std::abs(vertex.z - lowestZ);
             else
-                distToDown = std::abs(vertex.x - lowestX);
+                distToDown = std::abs(vertex.y - lowestY);
 
             float yCoordinate = distToDown / squareHeight;
 
@@ -846,7 +888,11 @@ void AttributedObject::mapBoundaryVertices()
             //Redo the barycentric mapping, ensuring it's to the correct edge
             Cartesian3 vertex = vertices[next];
 
-            float distToLeft = std::abs(vertex.z - lowestZ);
+            float distToLeft;
+            if(axesOrientation == ZY_COORDINATES)
+                distToLeft = std::abs(vertex.z - lowestZ);
+            else
+                distToLeft = std::abs(vertex.x - lowestX);
 
             float zCoordinate = distToLeft / squareWidth;
 
@@ -898,8 +944,32 @@ void AttributedObject::performFloater()
     findBoundary();
 
     //We use the interior and boundary vertices to create patches
-    createPatches();
+    //createPatches();
+int numLoops = 0;
+    //Cycle around the boundary vertices
+    {
+        auto test = boundaryConnections;
 
+        int start = boundaryConnections.begin()->first;
+        int current = start;
+
+
+
+        int next = boundaryConnections[current];
+        do
+        {
+
+            //std::cout << current << " -> " << next << std::endl;
+
+            current = next;
+            next = boundaryConnections[current];
+            test[current] = -1;
+            numLoops++;
+
+        } while (start != next);
+
+        int a = 5;
+    }
     //Using these values, we can assign the initial texture coordinates
     mapBoundaryVertices();
 
@@ -1028,7 +1098,7 @@ void AttributedObject::calculateNormals()
     //After every face normal is added, we normalise every value to get vertex normals
     for(int i = 0; i < normals.size(); i++)
     {
-        if(! (normals.at(i).x == 0 && normals.at(i).x == 0 && normals.at(i).x == 0))
+        if(! (normals.at(i).x == 0 && normals.at(i).y == 0 && normals.at(i).z == 0))
            {
                 normals.at(i) = normals.at(i).unit();
            }

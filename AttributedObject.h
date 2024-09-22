@@ -48,6 +48,14 @@
 #define PREVIOUS_EDGE(x) ((x) % 3) ? ((x) - 1) : ((x) + 2)
 #define NEXT_EDGE(x) (((x) % 3) == 2) ? ((x) - 2) : ((x) + 1)
 
+//Use enum to determine which 2 axes to use out of the possible 3
+enum
+{
+    XY_COORDINATES,
+    XZ_COORDINATES,
+    ZY_COORDINATES
+} axesPairing;
+
 class AttributedObject
     { // class AttributedObject
     public:
@@ -90,6 +98,9 @@ class AttributedObject
 
     //Boundary connections, i.e. the edges between boundary vertices
     std::map<int, int> boundaryConnections;
+
+    //Determine which 2 axes are used for the 2D coordinates
+    int axesOrientation;
 
     // constructor will initialise to safe values
     AttributedObject();

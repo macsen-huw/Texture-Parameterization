@@ -18,6 +18,7 @@
 // system libraries
 #include <iostream>
 #include <fstream>
+#include <string>
 
 // QT
 #include <QApplication>
@@ -35,16 +36,30 @@ int main(int argc, char **argv)
     QApplication renderApp(argc, argv);
 
     // check the args to make sure there's an input file
-    if (argc != 2) 
+    if (argc != 3)
         { // bad arg count
         // print an error message
-        std::cout << "Usage: " << argv[0] << " geometry" << std::endl; 
+        std::cout << "Incorrect Arguments" << std::endl;
+        std::cout << "Usage: " << argv[0] << " geometry orientation" << std::endl;
         // and leave
         return 0;
         } // bad arg count
 
     //  use the argument to create a height field &c.
     AttributedObject AttributedObject;
+
+    if(strcmp(argv[2], "xy") == 0)
+        AttributedObject.axesOrientation = XY_COORDINATES;
+    else if(strcmp(argv[2], "xz") == 0)
+        AttributedObject.axesOrientation = XZ_COORDINATES;
+    else if (strcmp(argv[2], "zy") == 0)
+        AttributedObject.axesOrientation = ZY_COORDINATES;
+    else
+    {
+        std::cout << "Invalid orientation" << std::endl;
+        return 0;
+    }
+
 
     // open the input files for the geometry & texture
     std::ifstream geometryFile(argv[1]);

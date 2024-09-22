@@ -70,6 +70,9 @@ class RenderWindow : public QWidget
     QLabel                      *yTranslateLabel;
     QLabel                      *zoomLabel;
 
+    QPushButton *exportButton;
+    QPushButton *exportOBJButton;
+
     public:
     // constructor
     RenderWindow
